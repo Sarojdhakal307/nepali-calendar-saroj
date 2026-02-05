@@ -1,0 +1,28 @@
+{
+  "name": "nepali-calender-saroj",
+  "version": "1.0.0",
+  "description": "Nepali BS calendar conversion library for Next.js and React Native",
+  "main": "dist/index.js",
+  "module": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "react-native": "dist/index.js",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup src/index.ts --format esm,cjs --dts",
+    "clean": "rm -rf dist"
+  },
+  "keywords": [
+    "nepali-calendar",
+    "bs-ad",
+    "nepali-date",
+    "bikram-sambat"
+  ],
+  "author": "Saroj",
+  "license": "ISC",
+  "devDependencies": {
+    "tsup": "^8.5.1",
+    "typescript": "^5.9.3"
+  }
+}
