@@ -1,6 +1,6 @@
 {
   "name": "nepali-calender-saroj",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "description": "Nepali BS calendar conversion library for Next.js and React Native",
   "main": "dist/index.js",
   "module": "dist/index.js",
