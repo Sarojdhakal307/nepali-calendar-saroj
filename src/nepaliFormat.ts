@@ -23,6 +23,16 @@ export const NEPALI_WEEKDAYS = [
   "शनिबार"
 ];
 
+export const NEPALI_WEEKDAYS_SHORT = [
+  "आइत",
+  "सोम",
+  "मङ्गल",
+  "बुध",
+  "बिहि",
+  "शुक्र",
+  "शनि"
+];
+
 export const NEPALI_DIGITS = ["०","१","२","३","४","५","६","७","८","९"];
 
 export function toNepaliNumber(num: number | string) {
