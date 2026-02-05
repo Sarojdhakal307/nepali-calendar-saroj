@@ -1,22 +1,57 @@
-How to Use nepali-calender-saroj
-1. Install the package
+# Nepali Calender Saroj
+
+A simple and easy-to-use JavaScript/TypeScript library for working with the Nepali (Bikram Sambat) calendar.
+Includes functions to convert between BS ↔ AD, format Nepali dates, and display Nepali months and weekdays.
+Also comes with React (Web) and React Native calendar components.
+
+---
+
+## Installation
+
+Using **npm**:
+
+```bash
 npm install nepali-calender-saroj
+```
 
+Or with **yarn**:
 
-or with yarn:
-
+```bash
 yarn add nepali-calender-saroj
+```
 
-2. Import functions
-import { bsToAd, adToBs, toNepaliNumber, NEPALI_MONTHS, NEPALI_WEEKDAYS } from "nepali-calender-saroj";
+---
 
-3. Convert BS → AD (Basic)
+## Importing Functions
+
+```javascript
+import {
+  bsToAd,
+  adToBs,
+  toNepaliNumber,
+  NEPALI_MONTHS,
+  NEPALI_WEEKDAYS
+} from "nepali-calender-saroj";
+```
+
+---
+
+## Usage
+
+### 1. Convert BS → AD (Basic)
+
+```javascript
 // Convert 5th Magh 2082 BS to Gregorian date
 const adDate = bsToAd(2082, 10, 5);
 console.log(adDate);
 // Output: 2026-01-19T00:00:00.000Z
+```
 
-4. Convert BS → AD (Detailed)
+---
+
+### 2. Convert BS → AD (Detailed)
+
+```javascript
 // Get Nepali formatted details
 const detailed = bsToAd(2082, 10, 5, true);
 console.log(detailed);
@@ -33,21 +68,21 @@ console.log(detailed);
   adDate: 2026-01-19T00:00:00.000Z
 }
 */
+```
 
+✅ `detailed = true` provides:
 
-✅ detailed = true gives:
+* Nepali year in digits
+* Nepali month name
+* Nepali day in digits
+* Nepali weekday name
+* Fully formatted Nepali date string
 
-Nepali year in digits
+---
 
-Nepali month name
+### 3. Convert AD → BS
 
-Nepali day in digits
-
-Nepali weekday name
-
-Fully formatted Nepali date string
-
-5. Convert AD → BS
+```javascript
 const bsDate = adToBs(new Date("2026-01-19"));
 console.log(bsDate);
 /*
@@ -57,28 +92,36 @@ console.log(bsDate);
   day: 5
 }
 */
+```
 
-6. Helpers
+---
+
+### 4. Helper Functions
+
+```javascript
 // Convert any number to Nepali digits
 console.log(toNepaliNumber(2026)); // Output: "२०२६"
 
 // Get Nepali month or weekday name
 console.log(NEPALI_MONTHS[0]);   // Output: "बैशाख"
 console.log(NEPALI_WEEKDAYS[1]); // Output: "सोमबार"
+```
 
-7. Example: Full Nepali Date Formatter
+---
+
+### 5. Full Nepali Date Formatter
+
+```javascript
 const nepaliDate = bsToAd(2082, 10, 5, true);
-
 console.log(nepaliDate.formattedNepaliDate);
 // Output: "२०८२ माघ ५, सोमबार"
+```
 
+---
 
-This gives users everything they need to get started: install, import, basic conversion, detailed conversion, and helpers.
+## WebCalendar (React / Web)
 
-
-
-
-WebCalendar (React / Web)
+```javascript
 import React from "react";
 import { WebCalendar } from "./WebCalendar";
 
@@ -90,13 +133,16 @@ export default function App() {
     />
   );
 }
+```
 
+* Use arrows to navigate between months.
+* Click a date → triggers `onDatePick`.
 
-Arrows let you move between months.
+---
 
-Click a date → triggers onDatePick.
+## RnCalendar (React Native)
 
-RnCalendar (React Native)
+```javascript
 import React from "react";
 import { View } from "react-native";
 import { RnCalendar } from "./RnCalendar";
@@ -111,14 +157,17 @@ export default function App() {
     </View>
   );
 }
+```
 
+* Tap arrows → next/previous month.
+* Tap a date → triggers `onDatePick`.
 
-Tap arrows → next/previous month.
+---
 
-Tap a date → triggers onDatePick.
+## Props Summary
 
-Props Summary
-Prop	Type	Description
-date	Date	Initial month (default = today)
-showNepali	boolean	Nepali month/week display
-onDatePick	(date: Date) => void	Callback when a date is selected
+| Prop         | Type                   | Description                      |
+| ------------ | ---------------------- | -------------------------------- |
+| `date`       | `Date`                 | Initial month (default = today)  |
+| `showNepali` | `boolean`              | Display Nepali months & weekdays |
+| `onDatePick` | `(date: Date) => void` | Callback when a date is selected |
