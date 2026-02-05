@@ -74,3 +74,51 @@ console.log(nepaliDate.formattedNepaliDate);
 
 
 This gives users everything they need to get started: install, import, basic conversion, detailed conversion, and helpers.
+
+
+
+
+WebCalendar (React / Web)
+import React from "react";
+import { WebCalendar } from "./WebCalendar";
+
+export default function App() {
+  return (
+    <WebCalendar
+      showNepali={true}                     // optional: show Nepali months & weekdays
+      onDatePick={(date) => console.log(date)} // optional: get selected date
+    />
+  );
+}
+
+
+Arrows let you move between months.
+
+Click a date → triggers onDatePick.
+
+RnCalendar (React Native)
+import React from "react";
+import { View } from "react-native";
+import { RnCalendar } from "./RnCalendar";
+
+export default function App() {
+  return (
+    <View style={{ padding: 20 }}>
+      <RnCalendar
+        showNepali={true}                     // optional: Nepali display
+        onDatePick={(date) => console.log(date)} // optional: handle tap on date
+      />
+    </View>
+  );
+}
+
+
+Tap arrows → next/previous month.
+
+Tap a date → triggers onDatePick.
+
+Props Summary
+Prop	Type	Description
+date	Date	Initial month (default = today)
+showNepali	boolean	Nepali month/week display
+onDatePick	(date: Date) => void	Callback when a date is selected
