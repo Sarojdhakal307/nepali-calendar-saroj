@@ -1,57 +1,43 @@
-import { NEPALI_MONTHS, NEPALI_WEEKDAYS, toNepaliNumber } from "./nepaliFormat";
-import { BsDetailedDate, CalendarData } from "./type";
-import calendarData from "./data/calendarData.json"
+import calendarData from "./data/calendarData.json";
+import type { CalendarData } from "./type";
+
 const data = calendarData as CalendarData;
 
+/**
+ * Convert a Bikram Sambat (BS) date to a Gregorian (AD) Date.
+ *
+ * Uses your `calendarData.json` as the source of truth.
+ * Returns `null` if the year is outside the data range (BS 2000–2090)
+ * or if the day/month values are invalid for that year.
+ *
+ * @example
+ * bsToAd(2082, 1, 1)
+ * // → Date("2025-04-14")
+ *
+ * bsToAd(2080, 12, 30)
+ * // → Date("2024-04-12")
+ */
 export function bsToAd(
-  year: number,
-  month: number,
-  day: number,
-  detailed: boolean = false
-): Date | BsDetailedDate | null {
-
-  const yearData = data.years.find(y => y.year === year);
+  bsYear: number,
+  bsMonth: number,
+  bsDay: number
+): Date | null {
+  const yearData = data.years.find((y) => y.year === bsYear);
   if (!yearData) return null;
 
-  const baseDate = new Date(yearData.english_start_date);
+  // Validate month and day bounds
+  if (bsMonth < 1 || bsMonth > 12) return null;
+  const daysInMonth = yearData.months[bsMonth - 1];
+  if (bsDay < 1 || bsDay > daysInMonth) return null;
 
-  let daysOffset = 0;
-
-  // Previous months
-  for (let i = 0; i < month - 1; i++) {
-    daysOffset += yearData.months[i];
+  // Count total days from Baisakh 1 of this year
+  let offset = 0;
+  for (let m = 0; m < bsMonth - 1; m++) {
+    offset += yearData.months[m];
   }
+  offset += bsDay - 1;
 
-  // Current month days
-  daysOffset += (day - 1);
-
-  const result = new Date(baseDate);
-  result.setDate(baseDate.getDate() + daysOffset);
-
-  // 👉 If only normal mode
-  if (!detailed) return result;
-
-  // 👉 Detailed mode
-  const weekday = result.getDay();
-
-  const detailedResult: BsDetailedDate = {
-    bsYear: year,
-    bsMonth: month,
-    bsDay: day,
-
-    nepaliYear: toNepaliNumber(year),
-    nepaliMonthName: NEPALI_MONTHS[month - 1],
-    nepaliDay: toNepaliNumber(day),
-    nepaliWeekDayName: NEPALI_WEEKDAYS[weekday],
-
-    formattedNepaliDate: `${toNepaliNumber(year)} ${NEPALI_MONTHS[month - 1]} ${toNepaliNumber(day)}, ${NEPALI_WEEKDAYS[weekday]}`,
-
-    adDate: result
-  };
-
-  return detailedResult;
+  const result = new Date(yearData.english_start_date);
+  result.setDate(result.getDate() + offset);
+  return result;
 }
-
-
-
-// const detail = bsToAd(2082, 10, 5, true);
