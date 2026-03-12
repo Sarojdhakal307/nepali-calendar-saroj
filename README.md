@@ -333,7 +333,7 @@ Data is sourced from official Nepali Patro records and anchored to the verified 
 
 ## Changelog
 
-### v5.2.0
+### v5.2.1
 - Added `mode` prop (`"dark" | "light"`) to both `NepaliCalendar` and `NepaliDatePicker`
 - Exported `CalendarMode` type
 - Dark mode remains the default — no breaking changes to existing usage
