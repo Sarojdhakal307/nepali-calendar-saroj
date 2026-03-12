@@ -19,6 +19,10 @@ import type {
   NepaliDatePickerProps,
 } from "./type";
 
+// ─── Types ────────────────────────────────────────────────────────────────────
+
+export type CalendarMode = "dark" | "light";
+
 // ─── Data ─────────────────────────────────────────────────────────────────────
 
 const YEARS: CalendarYear[] = (calendarData as CalendarData).years;
@@ -27,22 +31,47 @@ function getYearData(year: number): CalendarYear | undefined {
   return YEARS.find((y) => y.year === year);
 }
 
-/**
- * Return the grid start column (0=Sun … 6=Sat) for the first day
- * of a BS month.
- *
- * Your JSON stores isoWeekday (1=Mon … 7=Sun).
- * Convert to Sun-start index:  isoWeekday % 7  →  7→0, 1→1 … 6→6
- */
 function firstDayOfMonth(bsYear: number, bsMonth: number): number {
   const yd = getYearData(bsYear);
   if (!yd) return 0;
-  const startDow   = yd.start_day_of_year % 7; // 0=Sun … 6=Sat
-  const daysOffset = yd.months
-    .slice(0, bsMonth - 1)
-    .reduce((a, b) => a + b, 0);
+  const startDow   = yd.start_day_of_year % 7;
+  const daysOffset = yd.months.slice(0, bsMonth - 1).reduce((a, b) => a + b, 0);
   return (startDow + daysOffset) % 7;
 }
+
+// ─── Theme tokens ─────────────────────────────────────────────────────────────
+
+const DARK_VARS = `
+  --nc-bg:       #0f0f11;
+  --nc-surface:  #18181c;
+  --nc-surface2: #222228;
+  --nc-border:   #2e2e38;
+  --nc-accent:   #e8c97e;
+  --nc-accent2:  #c4a45a;
+  --nc-text:     #f0ede8;
+  --nc-text2:    #8b8796;
+  --nc-text3:    #5a5668;
+  --nc-red:      #e05c5c;
+  --nc-hover:    #24242c;
+  --nc-sel-bg:   #e8c97e;
+  --nc-sel-fg:   #0f0f11;
+`;
+
+const LIGHT_VARS = `
+  --nc-bg:       #f8f7f4;
+  --nc-surface:  #ffffff;
+  --nc-surface2: #f2f0eb;
+  --nc-border:   #e2ddd6;
+  --nc-accent:   #b07d2e;
+  --nc-accent2:  #8f6420;
+  --nc-text:     #1c1a17;
+  --nc-text2:    #6b6560;
+  --nc-text3:    #a09890;
+  --nc-red:      #c0392b;
+  --nc-hover:    #f0ede8;
+  --nc-sel-bg:   #b07d2e;
+  --nc-sel-fg:   #ffffff;
+`;
 
 // ─── Styles ───────────────────────────────────────────────────────────────────
 
@@ -51,23 +80,9 @@ const CSS = `
 
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-  :root {
-    --nc-bg:       #0f0f11;
-    --nc-surface:  #18181c;
-    --nc-surface2: #222228;
-    --nc-border:   #2e2e38;
-    --nc-accent:   #e8c97e;
-    --nc-accent2:  #c4a45a;
-    --nc-text:     #f0ede8;
-    --nc-text2:    #8b8796;
-    --nc-text3:    #5a5668;
-    --nc-red:      #e05c5c;
-    --nc-hover:    #24242c;
-    --nc-sel-bg:   #e8c97e;
-    --nc-sel-fg:   #0f0f11;
-    --nc-r:        12px;
-    --nc-r-sm:     8px;
-  }
+  /* ── Theme scopes ── */
+  .nc-theme-dark  { ${DARK_VARS}  }
+  .nc-theme-light { ${LIGHT_VARS} }
 
   /* ── card ── */
   .nc-card {
@@ -78,21 +93,25 @@ const CSS = `
     width: 296px;
     overflow: hidden;
   }
-  .nc-card-elevated { box-shadow: 0 8px 40px rgba(0,0,0,0.45); }
+  .nc-card-elevated { box-shadow: 0 8px 40px rgba(0,0,0,0.18); }
+  .nc-theme-dark  .nc-card-elevated,
+  .nc-theme-dark.nc-card-elevated { box-shadow: 0 8px 40px rgba(0,0,0,0.45); }
+
+  :root {
+    --nc-r:    12px;
+    --nc-r-sm: 8px;
+  }
+  .nc-card    { --nc-r: 12px; --nc-r-sm: 8px; }
 
   /* ── header ── */
   .nc-header {
-    display: flex;
-    align-items: center;
-    gap: 6px;
+    display: flex; align-items: center; gap: 6px;
     padding: 14px 12px 10px;
     border-bottom: 1px solid var(--nc-border);
   }
   .nc-nav {
-    flex-shrink: 0;
-    background: none;
-    border: 1px solid var(--nc-border);
-    border-radius: 6px;
+    flex-shrink: 0; background: none;
+    border: 1px solid var(--nc-border); border-radius: 6px;
     color: var(--nc-text2);
     width: 26px; height: 26px;
     display: flex; align-items: center; justify-content: center;
@@ -102,9 +121,8 @@ const CSS = `
   .nc-nav:hover { background: var(--nc-hover); color: var(--nc-text); border-color: var(--nc-text3); }
 
   .nc-title-btn {
-    flex: 1; background: none; border: none;
-    cursor: pointer; border-radius: 6px;
-    padding: 4px 6px; text-align: center;
+    flex: 1; background: none; border: none; cursor: pointer;
+    border-radius: 6px; padding: 4px 6px; text-align: center;
     transition: background 0.12s;
   }
   .nc-title-btn:hover { background: var(--nc-hover); }
@@ -121,57 +139,41 @@ const CSS = `
   .nc-year-grid::-webkit-scrollbar { width: 4px; }
   .nc-year-grid::-webkit-scrollbar-thumb { background: var(--nc-border); border-radius: 2px; }
   .nc-yr-btn {
-    background: none; border: 1px solid transparent;
-    border-radius: 6px; color: var(--nc-text2);
-    cursor: pointer; padding: 5px 2px;
+    background: none; border: 1px solid transparent; border-radius: 6px;
+    color: var(--nc-text2); cursor: pointer; padding: 5px 2px;
     font-family: 'DM Mono', monospace; font-size: 11px;
     transition: all 0.1s; text-align: center;
   }
   .nc-yr-btn:hover { background: var(--nc-hover); color: var(--nc-text); }
-  .nc-yr-btn.is-cur { background: var(--nc-accent); color: var(--nc-sel-fg); font-weight: 700; }
+  .nc-yr-btn.is-cur { background: var(--nc-sel-bg); color: var(--nc-sel-fg); font-weight: 700; }
 
   /* ── weekdays ── */
-  .nc-weekdays {
-    display: grid; grid-template-columns: repeat(7, 1fr);
-    padding: 8px 10px 2px;
-  }
+  .nc-weekdays { display: grid; grid-template-columns: repeat(7, 1fr); padding: 8px 10px 2px; }
   .nc-wd { text-align: center; font-size: 9.5px; font-weight: 500; color: var(--nc-text3); padding: 2px 0; }
   .nc-wd.is-sat { color: var(--nc-red); opacity: 0.7; }
 
   /* ── days ── */
-  .nc-days {
-    display: grid; grid-template-columns: repeat(7, 1fr);
-    padding: 2px 10px 12px; gap: 2px;
-  }
+  .nc-days { display: grid; grid-template-columns: repeat(7, 1fr); padding: 2px 10px 12px; gap: 2px; }
   .nc-day {
-    aspect-ratio: 1; display: flex;
-    align-items: center; justify-content: center;
+    aspect-ratio: 1; display: flex; align-items: center; justify-content: center;
     border-radius: 50%; font-size: 12.5px; color: var(--nc-text);
     cursor: pointer; transition: background 0.1s;
     -webkit-tap-highlight-color: transparent;
   }
-  .nc-day:hover   { background: var(--nc-hover); }
-  .nc-day.is-sat  { color: var(--nc-red); }
-  .nc-day.is-today {
-    box-shadow: 0 0 0 1.5px var(--nc-accent);
-    color: var(--nc-accent); font-weight: 600;
-  }
-  .nc-day.is-selected {
-    background: var(--nc-sel-bg) !important;
-    color: var(--nc-sel-fg) !important; font-weight: 700;
-  }
+  .nc-day:hover    { background: var(--nc-hover); }
+  .nc-day.is-sat   { color: var(--nc-red); }
+  .nc-day.is-today { box-shadow: 0 0 0 1.5px var(--nc-accent); color: var(--nc-accent); font-weight: 600; }
+  .nc-day.is-selected { background: var(--nc-sel-bg) !important; color: var(--nc-sel-fg) !important; font-weight: 700; }
   .nc-day.is-today.is-selected { box-shadow: 0 0 0 2px var(--nc-accent2); }
 
   /* ── selected bar ── */
   .nc-sel-bar {
     border-top: 1px solid var(--nc-border);
-    padding: 10px 14px;
-    display: flex; align-items: center;
-    justify-content: space-between; gap: 8px;
-    min-height: 52px;
+    padding: 10px 14px; display: flex; align-items: center;
+    justify-content: space-between; gap: 8px; min-height: 52px;
   }
-  .nc-sel-bs { font-size: 13.5px; font-weight: 600; color: var(--nc-accent); line-height: 1.3; }
-  .nc-sel-ad { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--nc-text3); margin-top: 2px; }
+  .nc-sel-bs  { font-size: 13.5px; font-weight: 600; color: var(--nc-accent); line-height: 1.3; }
+  .nc-sel-ad  { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--nc-text3); margin-top: 2px; }
   .nc-sel-empty {
     border-top: 1px solid var(--nc-border); padding: 14px;
     font-family: 'DM Mono', monospace; font-size: 11px;
@@ -231,30 +233,32 @@ function injectStyles(): void {
   stylesInjected = true;
 }
 
+// ─── Internal: theme class helper ────────────────────────────────────────────
+
+function themeClass(mode: CalendarMode): string {
+  return mode === "light" ? "nc-theme-light" : "nc-theme-dark";
+}
+
 // ─── Internal: CalendarCore ───────────────────────────────────────────────────
 
 interface CalendarCoreProps {
   initYear:   number;
-  initMonth:  number; // 1-indexed
+  initMonth:  number;
   selected:   BsDate | null;
   onSelect:   (bs: BsDate) => void;
   showNepali: boolean;
 }
 
 const CalendarCore: React.FC<CalendarCoreProps> = ({
-  initYear,
-  initMonth,
-  selected,
-  onSelect,
-  showNepali,
+  initYear, initMonth, selected, onSelect, showNepali,
 }) => {
   const [viewYear,  setViewYear]  = useState<number>(initYear);
   const [viewMonth, setViewMonth] = useState<number>(initMonth);
   const [showYears, setShowYears] = useState<boolean>(false);
   const yearGridRef = useRef<HTMLDivElement>(null);
 
-  const todayBs   = adToBs(new Date());
-  const yd        = getYearData(viewYear);
+  const todayBs = adToBs(new Date());
+  const yd      = getYearData(viewYear);
 
   if (!yd) {
     return (
@@ -267,62 +271,37 @@ const CalendarCore: React.FC<CalendarCoreProps> = ({
   const monthDays = yd.months[viewMonth - 1];
   const firstDay  = firstDayOfMonth(viewYear, viewMonth);
   const dayLabels = showNepali ? NEPALI_WEEKDAYS_SHORT : EN_WEEKDAYS_SHORT;
-
-  const adStart = bsToAd(viewYear, viewMonth, 1);
-  const adLabel = adStart ? formatAdDate(adStart) : "";
+  const adStart   = bsToAd(viewYear, viewMonth, 1);
+  const adLabel   = adStart ? formatAdDate(adStart) : "";
 
   const prevMonth = () => {
     if (viewMonth === 1) {
       const idx = YEARS.findIndex((y) => y.year === viewYear);
       if (idx > 0) { setViewYear(YEARS[idx - 1].year); setViewMonth(12); }
-    } else {
-      setViewMonth((m) => m - 1);
-    }
+    } else { setViewMonth((m) => m - 1); }
   };
 
   const nextMonth = () => {
     if (viewMonth === 12) {
       const idx = YEARS.findIndex((y) => y.year === viewYear);
       if (idx < YEARS.length - 1) { setViewYear(YEARS[idx + 1].year); setViewMonth(1); }
-    } else {
-      setViewMonth((m) => m + 1);
-    }
+    } else { setViewMonth((m) => m + 1); }
   };
 
-  const isToday = (d: number): boolean =>
-    !!todayBs &&
-    todayBs.year  === viewYear  &&
-    todayBs.month === viewMonth &&
-    todayBs.day   === d;
+  const isToday    = (d: number) => !!todayBs && todayBs.year === viewYear && todayBs.month === viewMonth && todayBs.day === d;
+  const isSelected = (d: number) => !!selected && selected.year === viewYear && selected.month === viewMonth && selected.day === d;
 
-  const isSelected = (d: number): boolean =>
-    !!selected &&
-    selected.year  === viewYear  &&
-    selected.month === viewMonth &&
-    selected.day   === d;
-
-  // Scroll the current year button into view when the year grid opens
   useEffect(() => {
     if (showYears && yearGridRef.current) {
-      yearGridRef.current
-        .querySelector<HTMLButtonElement>(".is-cur")
-        ?.scrollIntoView({ block: "center" });
+      yearGridRef.current.querySelector<HTMLButtonElement>(".is-cur")?.scrollIntoView({ block: "center" });
     }
   }, [showYears]);
 
   return (
     <>
-      {/* ── Header ── */}
       <div className="nc-header">
-        <button className="nc-nav" onClick={prevMonth} aria-label="Previous month">
-          ◀
-        </button>
-
-        <button
-          className="nc-title-btn"
-          onClick={() => setShowYears((v) => !v)}
-          aria-label="Pick year"
-        >
+        <button className="nc-nav" onClick={prevMonth} aria-label="Previous month">◀</button>
+        <button className="nc-title-btn" onClick={() => setShowYears((v) => !v)} aria-label="Pick year">
           <div className="nc-title-main">
             {showNepali
               ? `${NEPALI_MONTHS[viewMonth - 1]} ${toNepaliNumber(viewYear)}`
@@ -330,13 +309,9 @@ const CalendarCore: React.FC<CalendarCoreProps> = ({
           </div>
           <div className="nc-title-sub">{adLabel}</div>
         </button>
-
-        <button className="nc-nav" onClick={nextMonth} aria-label="Next month">
-          ▶
-        </button>
+        <button className="nc-nav" onClick={nextMonth} aria-label="Next month">▶</button>
       </div>
 
-      {/* ── Year picker overlay ── */}
       {showYears ? (
         <div className="nc-year-grid" ref={yearGridRef}>
           {YEARS.map((yd) => (
@@ -351,42 +326,27 @@ const CalendarCore: React.FC<CalendarCoreProps> = ({
         </div>
       ) : (
         <>
-          {/* ── Weekday labels ── */}
           <div className="nc-weekdays">
             {dayLabels.map((label, i) => (
-              <div key={i} className={`nc-wd${i === 6 ? " is-sat" : ""}`}>
-                {label}
-              </div>
+              <div key={i} className={`nc-wd${i === 6 ? " is-sat" : ""}`}>{label}</div>
             ))}
           </div>
-
-          {/* ── Day cells ── */}
           <div className="nc-days">
-            {/* Empty cells before first day */}
-            {Array.from({ length: firstDay }).map((_, i) => (
-              <div key={`empty-${i}`} />
-            ))}
-
-            {/* Day cells */}
+            {Array.from({ length: firstDay }).map((_, i) => <div key={`empty-${i}`} />)}
             {Array.from({ length: monthDays }).map((_, i) => {
               const day = i + 1;
               const dow = (firstDay + i) % 7;
               const cls = [
                 "nc-day",
-                dow === 6      ? "is-sat"      : "",
-                isToday(day)   ? "is-today"    : "",
-                isSelected(day)? "is-selected" : "",
-              ]
-                .filter(Boolean)
-                .join(" ");
-
+                dow === 6       ? "is-sat"      : "",
+                isToday(day)    ? "is-today"    : "",
+                isSelected(day) ? "is-selected" : "",
+              ].filter(Boolean).join(" ");
               return (
                 <div
-                  key={day}
-                  className={cls}
+                  key={day} className={cls}
                   onClick={() => onSelect({ year: viewYear, month: viewMonth, day })}
-                  role="button"
-                  tabIndex={0}
+                  role="button" tabIndex={0}
                   aria-label={`${viewYear} ${NEPALI_MONTHS_EN[viewMonth - 1]} ${day}`}
                   onKeyDown={(e) => {
                     if (e.key === "Enter" || e.key === " ")
@@ -412,17 +372,9 @@ interface SelectedBarProps {
   onClear:    () => void;
 }
 
-const SelectedBar: React.FC<SelectedBarProps> = ({
-  selected,
-  showNepali,
-  onClear,
-}) => {
-  if (!selected) {
-    return <div className="nc-sel-empty">No date selected</div>;
-  }
-
+const SelectedBar: React.FC<SelectedBarProps> = ({ selected, showNepali, onClear }) => {
+  if (!selected) return <div className="nc-sel-empty">No date selected</div>;
   const ad = bsToAd(selected.year, selected.month, selected.day);
-
   return (
     <div className="nc-sel-bar">
       <div>
@@ -431,9 +383,7 @@ const SelectedBar: React.FC<SelectedBarProps> = ({
         </div>
         {ad && <div className="nc-sel-ad">{formatAdDate(ad)}</div>}
       </div>
-      <button className="nc-clear-btn" onClick={onClear} aria-label="Clear selection">
-        ✕
-      </button>
+      <button className="nc-clear-btn" onClick={onClear} aria-label="Clear selection">✕</button>
     </div>
   );
 };
@@ -443,30 +393,20 @@ const SelectedBar: React.FC<SelectedBarProps> = ({
 /**
  * NepaliCalendar — inline calendar component.
  *
- * Supports both controlled (`value`) and uncontrolled (`defaultValue`) modes.
- * Click the month/year header to open the year-jump grid.
- * Saturday column is highlighted in red (Nepali convention).
+ * @prop mode  - "dark" (default) | "light"  — controls the colour theme
  *
  * @example
- * // Uncontrolled
- * <NepaliCalendar onChange={(bs, ad) => console.log(bs, ad)} />
- *
- * @example
- * // Controlled
- * const [date, setDate] = useState<BsDate | null>(null);
- * <NepaliCalendar value={date} onChange={(bs) => setDate(bs)} />
- *
- * @example
- * // English labels, no selected-date strip
- * <NepaliCalendar showNepali={false} showSelectedBar={false} />
+ * <NepaliCalendar mode="light" onChange={(bs) => console.log(bs)} />
+ * <NepaliCalendar mode="dark"  onChange={(bs) => console.log(bs)} />
  */
-export const NepaliCalendar: React.FC<NepaliCalendarProps> = ({
+export const NepaliCalendar: React.FC<NepaliCalendarProps & { mode?: CalendarMode }> = ({
   value,
   defaultValue,
   onChange,
   showNepali = true,
   showSelectedBar = true,
   className,
+  mode = "light",
 }) => {
   injectStyles();
 
@@ -475,7 +415,6 @@ export const NepaliCalendar: React.FC<NepaliCalendarProps> = ({
     value !== undefined ? (value ?? null) : (defaultValue ?? null)
   );
 
-  // Sync internal state when controlled value changes
   useEffect(() => {
     if (value !== undefined) setInternal(value ?? null);
   }, [value]);
@@ -496,20 +435,13 @@ export const NepaliCalendar: React.FC<NepaliCalendarProps> = ({
   };
 
   return (
-    <div className={`nc-card nc-card-elevated${className ? ` ${className}` : ""}`}>
+    <div className={`${themeClass(mode)} nc-card nc-card-elevated${className ? ` ${className}` : ""}`}>
       <CalendarCore
-        initYear={initYear}
-        initMonth={initMonth}
-        selected={selected}
-        onSelect={handleSelect}
-        showNepali={showNepali}
+        initYear={initYear} initMonth={initMonth}
+        selected={selected} onSelect={handleSelect} showNepali={showNepali}
       />
       {showSelectedBar && (
-        <SelectedBar
-          selected={selected}
-          showNepali={showNepali}
-          onClear={handleClear}
-        />
+        <SelectedBar selected={selected} showNepali={showNepali} onClear={handleClear} />
       )}
     </div>
   );
@@ -520,26 +452,19 @@ export const NepaliCalendar: React.FC<NepaliCalendarProps> = ({
 /**
  * NepaliDatePicker — trigger button + dropdown calendar.
  *
- * Closes on outside click. Supports controlled and uncontrolled modes.
+ * @prop mode  - "dark" (default) | "light"  — controls the colour theme
  *
  * @example
- * <NepaliDatePicker onChange={(bs, ad) => console.log(bs, ad)} />
- *
- * @example
- * // English labels
- * <NepaliDatePicker showNepali={false} placeholder="Select date" />
- *
- * @example
- * // Controlled
- * const [date, setDate] = useState<BsDate | null>(null);
- * <NepaliDatePicker value={date} onChange={(bs) => setDate(bs)} />
+ * <NepaliDatePicker mode="light" onChange={(bs) => console.log(bs)} />
+ * <NepaliDatePicker mode="dark"  placeholder="Select date" />
  */
-export const NepaliDatePicker: React.FC<NepaliDatePickerProps> = ({
+export const NepaliDatePicker: React.FC<NepaliDatePickerProps & { mode?: CalendarMode }> = ({
   value,
   onChange,
   placeholder = "मिति छान्नुहोस्",
   showNepali = true,
   className,
+  mode = "light",
 }) => {
   injectStyles();
 
@@ -552,7 +477,6 @@ export const NepaliDatePicker: React.FC<NepaliDatePickerProps> = ({
     if (value !== undefined) setInternal(value ?? null);
   }, [value]);
 
-  // Close when clicking outside
   useEffect(() => {
     const handler = (e: MouseEvent) => {
       if (!wrapRef.current?.contains(e.target as Node)) setOpen(false);
@@ -564,9 +488,7 @@ export const NepaliDatePicker: React.FC<NepaliDatePickerProps> = ({
   const selected   = value !== undefined ? (value ?? null) : internal;
   const initYear   = selected?.year  ?? todayBs?.year  ?? YEARS[YEARS.length - 1].year;
   const initMonth  = selected?.month ?? todayBs?.month ?? 1;
-  const selectedAd = selected
-    ? bsToAd(selected.year, selected.month, selected.day)
-    : null;
+  const selectedAd = selected ? bsToAd(selected.year, selected.month, selected.day) : null;
 
   const handleSelect = (bs: BsDate) => {
     const ad = bsToAd(bs.year, bs.month, bs.day);
@@ -583,10 +505,9 @@ export const NepaliDatePicker: React.FC<NepaliDatePickerProps> = ({
 
   return (
     <div
-      className={`nc-picker-wrap${className ? ` ${className}` : ""}`}
+      className={`${themeClass(mode)} nc-picker-wrap${className ? ` ${className}` : ""}`}
       ref={wrapRef}
     >
-      {/* ── Trigger button ── */}
       <button
         type="button"
         className={`nc-trigger${open ? " is-open" : ""}`}
@@ -608,25 +529,17 @@ export const NepaliDatePicker: React.FC<NepaliDatePickerProps> = ({
         <span className="nc-trigger-arrow">▼</span>
       </button>
 
-      {/* ── Dropdown ── */}
       {open && (
         <div className="nc-dropdown" role="dialog" aria-modal="true">
           <div
-            className="nc-card"
-            style={{ boxShadow: "0 20px 56px rgba(0,0,0,0.65)" }}
+            className={`${themeClass(mode)} nc-card`}
+            style={{ boxShadow: mode === "dark" ? "0 20px 56px rgba(0,0,0,0.65)" : "0 20px 56px rgba(0,0,0,0.15)" }}
           >
             <CalendarCore
-              initYear={initYear}
-              initMonth={initMonth}
-              selected={selected}
-              onSelect={handleSelect}
-              showNepali={showNepali}
+              initYear={initYear} initMonth={initMonth}
+              selected={selected} onSelect={handleSelect} showNepali={showNepali}
             />
-            <SelectedBar
-              selected={selected}
-              showNepali={showNepali}
-              onClear={handleClear}
-            />
+            <SelectedBar selected={selected} showNepali={showNepali} onClear={handleClear} />
           </div>
         </div>
       )}

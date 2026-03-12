@@ -15,6 +15,7 @@ Supports date display, date picking, and AD ↔ BS conversion — covering **BS 
 - 🔽 **Date picker** — trigger button + dropdown, closes on outside click
 - 🔁 **AD ↔ BS conversion** — accurate utilities for both directions
 - 🇳🇵 **Nepali script** — Devanagari labels and digits, togglable to English
+- 🌗 **Dark & light mode** — built-in theme support via a single `mode` prop
 - 📆 **BS 2000 – 2090** — 91 years of verified calendar data
 - 🎛 **Controlled & uncontrolled** — works like a standard React input
 - ✅ **Fully typed** — complete TypeScript definitions included
@@ -81,6 +82,7 @@ import { NepaliCalendar } from "nepali-calender-saroj";
 | `onChange` | `(bs: BsDate \| null, ad: Date \| null) => void` | — | Called on day click or clear. |
 | `showNepali` | `boolean` | `true` | Use Nepali (Devanagari) script for labels and digits. |
 | `showSelectedBar` | `boolean` | `true` | Show the selected-date strip below the grid. |
+| `mode` | `"dark" \| "light"` | `"dark"` | Colour theme for the component. |
 | `className` | `string` | — | Extra CSS class on the root element. |
 
 ---
@@ -105,11 +107,46 @@ import { NepaliDatePicker } from "nepali-calender-saroj";
 | `onChange` | `(bs: BsDate \| null, ad: Date \| null) => void` | — | Called when a date is picked or cleared. |
 | `placeholder` | `string` | `"मिति छान्नुहोस्"` | Placeholder text shown when nothing is selected. |
 | `showNepali` | `boolean` | `true` | Use Nepali script for labels and digits. |
+| `mode` | `"dark" \| "light"` | `"light"` | Colour theme for the component. |
 | `className` | `string` | — | Extra CSS class on the root element. |
 
 ---
 
 ## Usage Examples
+
+### Dark and light mode
+
+Both components accept a `mode` prop. The default is `"dark"`.
+
+```tsx
+{/* Light mode  (default)*/}
+<NepaliCalendar   mode="light" onChange={(bs) => console.log(bs)} />
+<NepaliDatePicker mode="light" placeholder="Select date" onChange={(bs) => console.log(bs)} />
+
+{/* Dark mode */}
+<NepaliCalendar   mode="dark"  onChange={(bs) => console.log(bs)} />
+<NepaliDatePicker mode="dark"  onChange={(bs) => console.log(bs)} />
+```
+
+You can wire `mode` to your app's theme state to switch themes at runtime:
+
+```tsx
+import { useState } from "react";
+import { NepaliCalendar, type CalendarMode } from "nepali-calender-saroj";
+
+function App() {
+  const [mode, setMode] = useState<CalendarMode>("dark");
+
+  return (
+    <>
+      <button onClick={() => setMode((m) => m === "dark" ? "light" : "dark")}>
+        Toggle theme
+      </button>
+      <NepaliCalendar mode={mode} onChange={(bs) => console.log(bs)} />
+    </>
+  );
+}
+```
 
 ### Controlled mode
 
@@ -132,7 +169,7 @@ function MyForm() {
 ### English labels
 
 ```tsx
-<NepaliCalendar  showNepali={false} onChange={(bs, ad) => console.log(bs, ad)} />
+<NepaliCalendar   showNepali={false} onChange={(bs, ad) => console.log(bs, ad)} />
 <NepaliDatePicker showNepali={false} placeholder="Select date" onChange={(bs, ad) => console.log(bs, ad)} />
 ```
 
@@ -206,7 +243,6 @@ import { toNepaliNumber } from "nepali-calender-saroj";
 
 toNepaliNumber(2082);   // "२०८२"
 toNepaliNumber("15");   // "१५"
-toNepaliNumber(2082);   // "२०८२"
 ```
 
 ---
@@ -257,6 +293,7 @@ import {
 import type {
   BsDate,               // { year, month, day }
   BsDetailedDate,       // full formatted date object
+  CalendarMode,         // "dark" | "light"
   CalendarYear,         // single year entry from calendarData.json
   CalendarData,         // { years: CalendarYear[] }
   NepaliCalendarProps,  // props for <NepaliCalendar />
@@ -272,6 +309,12 @@ interface BsDate {
   month: number;  // 1–12
   day: number;    // 1–32
 }
+```
+
+### `CalendarMode`
+
+```ts
+type CalendarMode = "dark" | "light";
 ```
 
 ---
@@ -290,7 +333,13 @@ Data is sourced from official Nepali Patro records and anchored to the verified 
 
 ## Changelog
 
-### v5.0.0
+### v5.2.0
+- Added `mode` prop (`"dark" | "light"`) to both `NepaliCalendar` and `NepaliDatePicker`
+- Exported `CalendarMode` type
+- Dark mode remains the default — no breaking changes to existing usage
+- Light mode uses a warm stone palette with amber accents
+
+### v5.1.1
 - Rewrote all components in TypeScript with full type exports
 - Fixed `start_day_of_year` grid offset calculation (isoWeekday → Sun-start index)
 - Added `formatBsDate`, `formatAdDate` utilities
@@ -307,4 +356,4 @@ Data is sourced from official Nepali Patro records and anchored to the verified 
 
 ## License
 
- © Saroj Dhakal @Sarojdhakal307
+© Saroj Dhakal @Sarojdhakal307
