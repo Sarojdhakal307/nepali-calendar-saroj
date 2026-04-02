@@ -34,7 +34,7 @@ function getYearData(year: number): CalendarYear | undefined {
 function firstDayOfMonth(bsYear: number, bsMonth: number): number {
   const yd = getYearData(bsYear);
   if (!yd) return 0;
-  const startDow = yd.start_day_of_year % 7;
+  const startDow   = yd.start_day_of_year % 7;
   const daysOffset = yd.months.slice(0, bsMonth - 1).reduce((a, b) => a + b, 0);
   return (startDow + daysOffset) % 7;
 }
@@ -89,7 +89,11 @@ const LIGHT_VARS = `
 const CSS = `
   @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@300;400;500;600&family=DM+Mono:wght@300;400;500&display=swap');
 
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  .nc-card *, .nc-card *::before, .nc-card *::after,
+  .nc-picker-wrap *, .nc-picker-wrap *::before, .nc-picker-wrap *::after,
+  .nc-dropdown *, .nc-dropdown *::before, .nc-dropdown *::after {
+    box-sizing: border-box; margin: 0; padding: 0;
+  }
 
   /* ── Theme scopes ── */
   .nc-theme-dark  { ${DARK_VARS}  }
@@ -108,10 +112,6 @@ const CSS = `
   .nc-theme-dark  .nc-card-elevated,
   .nc-theme-dark.nc-card-elevated { box-shadow: 0 8px 40px rgba(0,0,0,0.45); }
 
-  :root {
-    --nc-r:    12px;
-    --nc-r-sm: 8px;
-  }
   .nc-card    { --nc-r: 12px; --nc-r-sm: 8px; }
 
   /* ── header ── */
@@ -253,107 +253,66 @@ function themeClass(mode: CalendarMode): string {
 // ─── Internal: CalendarCore ───────────────────────────────────────────────────
 
 interface CalendarCoreProps {
-  initYear: number;
-  initMonth: number;
-  selected: BsDate | null;
-  onSelect: (bs: BsDate) => void;
+  initYear:   number;
+  initMonth:  number;
+  selected:   BsDate | null;
+  onSelect:   (bs: BsDate) => void;
   showNepali: boolean;
 }
 
 const CalendarCore: React.FC<CalendarCoreProps> = ({
-  initYear,
-  initMonth,
-  selected,
-  onSelect,
-  showNepali,
+  initYear, initMonth, selected, onSelect, showNepali,
 }) => {
-  const [viewYear, setViewYear] = useState<number>(initYear);
+  const [viewYear,  setViewYear]  = useState<number>(initYear);
   const [viewMonth, setViewMonth] = useState<number>(initMonth);
   const [showYears, setShowYears] = useState<boolean>(false);
   const yearGridRef = useRef<HTMLDivElement>(null);
 
   const todayBs = adToBs(new Date());
-  const yd = getYearData(viewYear);
+  const yd      = getYearData(viewYear);
 
   if (!yd) {
     return (
-      <div
-        style={{
-          padding: 16,
-          color: "var(--nc-text3)",
-          fontFamily: "DM Mono, monospace",
-          fontSize: 12,
-        }}
-      >
+      <div style={{ padding: 16, color: "var(--nc-text3)", fontFamily: "DM Mono, monospace", fontSize: 12 }}>
         No data for year {viewYear}
       </div>
     );
   }
 
   const monthDays = yd.months[viewMonth - 1];
-  const firstDay = firstDayOfMonth(viewYear, viewMonth);
+  const firstDay  = firstDayOfMonth(viewYear, viewMonth);
   const dayLabels = showNepali ? NEPALI_WEEKDAYS_SHORT : EN_WEEKDAYS_SHORT;
-  const adStart = bsToAd(viewYear, viewMonth, 1);
-  const adLabel = adStart ? formatAdDate(adStart) : "";
+  const adStart   = bsToAd(viewYear, viewMonth, 1);
+  const adLabel   = adStart ? formatAdDate(adStart) : "";
 
   const prevMonth = () => {
     if (viewMonth === 1) {
       const idx = YEARS.findIndex((y) => y.year === viewYear);
-      if (idx > 0) {
-        setViewYear(YEARS[idx - 1].year);
-        setViewMonth(12);
-      }
-    } else {
-      setViewMonth((m) => m - 1);
-    }
+      if (idx > 0) { setViewYear(YEARS[idx - 1].year); setViewMonth(12); }
+    } else { setViewMonth((m) => m - 1); }
   };
 
   const nextMonth = () => {
     if (viewMonth === 12) {
       const idx = YEARS.findIndex((y) => y.year === viewYear);
-      if (idx < YEARS.length - 1) {
-        setViewYear(YEARS[idx + 1].year);
-        setViewMonth(1);
-      }
-    } else {
-      setViewMonth((m) => m + 1);
-    }
+      if (idx < YEARS.length - 1) { setViewYear(YEARS[idx + 1].year); setViewMonth(1); }
+    } else { setViewMonth((m) => m + 1); }
   };
 
-  const isToday = (d: number) =>
-    !!todayBs &&
-    todayBs.year === viewYear &&
-    todayBs.month === viewMonth &&
-    todayBs.day === d;
-  const isSelected = (d: number) =>
-    !!selected &&
-    selected.year === viewYear &&
-    selected.month === viewMonth &&
-    selected.day === d;
+  const isToday    = (d: number) => !!todayBs && todayBs.year === viewYear && todayBs.month === viewMonth && todayBs.day === d;
+  const isSelected = (d: number) => !!selected && selected.year === viewYear && selected.month === viewMonth && selected.day === d;
 
   useEffect(() => {
     if (showYears && yearGridRef.current) {
-      yearGridRef.current
-        .querySelector<HTMLButtonElement>(".is-cur")
-        ?.scrollIntoView({ block: "center" });
+      yearGridRef.current.querySelector<HTMLButtonElement>(".is-cur")?.scrollIntoView({ block: "center" });
     }
   }, [showYears]);
 
   return (
     <>
       <div className="nc-header">
-        <button
-          className="nc-nav"
-          onClick={prevMonth}
-          aria-label="Previous month"
-        >
-          ◀
-        </button>
-        <button
-          className="nc-title-btn"
-          onClick={() => setShowYears((v) => !v)}
-          aria-label="Pick year"
-        >
+        <button className="nc-nav" onClick={prevMonth} aria-label="Previous month">◀</button>
+        <button className="nc-title-btn" onClick={() => setShowYears((v) => !v)} aria-label="Pick year">
           <div className="nc-title-main">
             {showNepali
               ? `${NEPALI_MONTHS[viewMonth - 1]} ${toNepaliNumber(viewYear)}`
@@ -361,9 +320,7 @@ const CalendarCore: React.FC<CalendarCoreProps> = ({
           </div>
           <div className="nc-title-sub">{adLabel}</div>
         </button>
-        <button className="nc-nav" onClick={nextMonth} aria-label="Next month">
-          ▶
-        </button>
+        <button className="nc-nav" onClick={nextMonth} aria-label="Next month">▶</button>
       </div>
 
       {showYears ? (
@@ -372,10 +329,7 @@ const CalendarCore: React.FC<CalendarCoreProps> = ({
             <button
               key={yd.year}
               className={`nc-yr-btn${yd.year === viewYear ? " is-cur" : ""}`}
-              onClick={() => {
-                setViewYear(yd.year);
-                setShowYears(false);
-              }}
+              onClick={() => { setViewYear(yd.year); setShowYears(false); }}
             >
               {yd.year}
             </button>
@@ -385,35 +339,25 @@ const CalendarCore: React.FC<CalendarCoreProps> = ({
         <>
           <div className="nc-weekdays">
             {dayLabels.map((label, i) => (
-              <div key={i} className={`nc-wd${i === 6 ? " is-sat" : ""}`}>
-                {label}
-              </div>
+              <div key={i} className={`nc-wd${i === 6 ? " is-sat" : ""}`}>{label}</div>
             ))}
           </div>
           <div className="nc-days">
-            {Array.from({ length: firstDay }).map((_, i) => (
-              <div key={`empty-${i}`} />
-            ))}
+            {Array.from({ length: firstDay }).map((_, i) => <div key={`empty-${i}`} />)}
             {Array.from({ length: monthDays }).map((_, i) => {
               const day = i + 1;
               const dow = (firstDay + i) % 7;
               const cls = [
                 "nc-day",
-                dow === 6 ? "is-sat" : "",
-                isToday(day) ? "is-today" : "",
+                dow === 6       ? "is-sat"      : "",
+                isToday(day)    ? "is-today"    : "",
                 isSelected(day) ? "is-selected" : "",
-              ]
-                .filter(Boolean)
-                .join(" ");
+              ].filter(Boolean).join(" ");
               return (
                 <div
-                  key={day}
-                  className={cls}
-                  onClick={() =>
-                    onSelect({ year: viewYear, month: viewMonth, day })
-                  }
-                  role="button"
-                  tabIndex={0}
+                  key={day} className={cls}
+                  onClick={() => onSelect({ year: viewYear, month: viewMonth, day })}
+                  role="button" tabIndex={0}
                   aria-label={`${viewYear} ${NEPALI_MONTHS_EN[viewMonth - 1]} ${day}`}
                   onKeyDown={(e) => {
                     if (e.key === "Enter" || e.key === " ")
@@ -434,38 +378,23 @@ const CalendarCore: React.FC<CalendarCoreProps> = ({
 // ─── Internal: SelectedBar ────────────────────────────────────────────────────
 
 interface SelectedBarProps {
-  selected: BsDate | null;
+  selected:   BsDate | null;
   showNepali: boolean;
-  onClear: () => void;
+  onClear:    () => void;
 }
 
-const SelectedBar: React.FC<SelectedBarProps> = ({
-  selected,
-  showNepali,
-  onClear,
-}) => {
+const SelectedBar: React.FC<SelectedBarProps> = ({ selected, showNepali, onClear }) => {
   if (!selected) return <div className="nc-sel-empty">No date selected</div>;
   const ad = bsToAd(selected.year, selected.month, selected.day);
   return (
     <div className="nc-sel-bar">
       <div>
         <div className="nc-sel-bs">
-          {formatBsDate(
-            selected.year,
-            selected.month,
-            selected.day,
-            showNepali,
-          )}
+          {formatBsDate(selected.year, selected.month, selected.day, showNepali)}
         </div>
         {ad && <div className="nc-sel-ad">{formatAdDate(ad)}</div>}
       </div>
-      <button
-        className="nc-clear-btn"
-        onClick={onClear}
-        aria-label="Clear selection"
-      >
-        ✕
-      </button>
+      <button className="nc-clear-btn" onClick={onClear} aria-label="Clear selection">✕</button>
     </div>
   );
 };
@@ -481,9 +410,7 @@ const SelectedBar: React.FC<SelectedBarProps> = ({
  * <NepaliCalendar mode="light" onChange={(bs, ad) => console.log(bs, ad)} />
  * <NepaliCalendar mode="dark"  onChange={(bs, ad) => console.log(bs, ad)} />
  */
-export const NepaliCalendar: React.FC<
-  NepaliCalendarProps & { mode?: CalendarMode }
-> = ({
+export const NepaliCalendar: React.FC<NepaliCalendarProps & { mode?: CalendarMode }> = ({
   value,
   defaultValue,
   onChange,
@@ -496,16 +423,15 @@ export const NepaliCalendar: React.FC<
 
   const todayBs = adToBs(new Date());
   const [internal, setInternal] = useState<BsDate | null>(
-    value !== undefined ? (value ?? null) : (defaultValue ?? null),
+    value !== undefined ? (value ?? null) : (defaultValue ?? null)
   );
 
   useEffect(() => {
     if (value !== undefined) setInternal(value ?? null);
   }, [value]);
 
-  const selected = value !== undefined ? (value ?? null) : internal;
-  const initYear =
-    selected?.year ?? todayBs?.year ?? YEARS[YEARS.length - 1].year;
+  const selected  = value !== undefined ? (value ?? null) : internal;
+  const initYear  = selected?.year  ?? todayBs?.year  ?? YEARS[YEARS.length - 1].year;
   const initMonth = selected?.month ?? todayBs?.month ?? 1;
 
   const handleSelect = (bs: BsDate) => {
@@ -520,22 +446,13 @@ export const NepaliCalendar: React.FC<
   };
 
   return (
-    <div
-      className={`${themeClass(mode)} nc-card nc-card-elevated${className ? ` ${className}` : ""}`}
-    >
+    <div className={`${themeClass(mode)} nc-card nc-card-elevated${className ? ` ${className}` : ""}`}>
       <CalendarCore
-        initYear={initYear}
-        initMonth={initMonth}
-        selected={selected}
-        onSelect={handleSelect}
-        showNepali={showNepali}
+        initYear={initYear} initMonth={initMonth}
+        selected={selected} onSelect={handleSelect} showNepali={showNepali}
       />
       {showSelectedBar && (
-        <SelectedBar
-          selected={selected}
-          showNepali={showNepali}
-          onClear={handleClear}
-        />
+        <SelectedBar selected={selected} showNepali={showNepali} onClear={handleClear} />
       )}
     </div>
   );
@@ -546,10 +463,8 @@ export const NepaliCalendar: React.FC<
 /**
  * Extended props for NepaliDatePicker that support both BS and AD date inputs.
  */
-export interface NepaliDatePickerExtendedProps extends Omit<
-  NepaliDatePickerProps,
-  "value" | "defaultValue"
-> {
+export interface NepaliDatePickerExtendedProps
+  extends Omit<NepaliDatePickerProps, "value" | "defaultValue"> {
   mode?: CalendarMode;
 
   /**
@@ -629,7 +544,7 @@ export const NepaliDatePicker: React.FC<NepaliDatePickerExtendedProps> = ({
     return null;
   };
 
-  const [open, setOpen] = useState<boolean>(false);
+  const [open, setOpen]         = useState<boolean>(false);
   const [internal, setInternal] = useState<BsDate | null>(resolveInitial);
   const wrapRef = useRef<HTMLDivElement>(null);
 
@@ -653,18 +568,13 @@ export const NepaliDatePicker: React.FC<NepaliDatePickerExtendedProps> = ({
 
   // Determine what to display: controlled value wins, then internal state
   const selected: BsDate | null =
-    value !== undefined
-      ? (value ?? null)
-      : adValue !== undefined
-        ? adDateToBs(adValue)
-        : internal;
+    value !== undefined   ? (value ?? null)      :
+    adValue !== undefined ? adDateToBs(adValue)  :
+    internal;
 
-  const initYear =
-    selected?.year ?? todayBs?.year ?? YEARS[YEARS.length - 1].year;
+  const initYear  = selected?.year  ?? todayBs?.year  ?? YEARS[YEARS.length - 1].year;
   const initMonth = selected?.month ?? todayBs?.month ?? 1;
-  const selectedAd = selected
-    ? bsToAd(selected.year, selected.month, selected.day)
-    : null;
+  const selectedAd = selected ? bsToAd(selected.year, selected.month, selected.day) : null;
 
   const handleSelect = (bs: BsDate) => {
     const ad = bsToAd(bs.year, bs.month, bs.day);
@@ -696,12 +606,7 @@ export const NepaliDatePicker: React.FC<NepaliDatePickerExtendedProps> = ({
         <span className="nc-trigger-body">
           <div className={`nc-trigger-main${selected ? "" : " is-ph"}`}>
             {selected
-              ? formatBsDate(
-                  selected.year,
-                  selected.month,
-                  selected.day,
-                  showNepali,
-                )
+              ? formatBsDate(selected.year, selected.month, selected.day, showNepali)
               : placeholder}
           </div>
           {selected && selectedAd && (
@@ -723,17 +628,10 @@ export const NepaliDatePicker: React.FC<NepaliDatePickerExtendedProps> = ({
             }}
           >
             <CalendarCore
-              initYear={initYear}
-              initMonth={initMonth}
-              selected={selected}
-              onSelect={handleSelect}
-              showNepali={showNepali}
+              initYear={initYear} initMonth={initMonth}
+              selected={selected} onSelect={handleSelect} showNepali={showNepali}
             />
-            <SelectedBar
-              selected={selected}
-              showNepali={showNepali}
-              onClear={handleClear}
-            />
+            <SelectedBar selected={selected} showNepali={showNepali} onClear={handleClear} />
           </div>
         </div>
       )}
