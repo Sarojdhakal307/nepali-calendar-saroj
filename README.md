@@ -18,6 +18,7 @@ Supports date display, date picking, and AD ↔ BS conversion — covering **BS 
 - 🌗 **Dark & light mode** — built-in theme support via a single `mode` prop
 - 📆 **BS 2000 – 2090** — 91 years of verified calendar data
 - 🎛 **Controlled & uncontrolled** — works like a standard React input
+- 📆 **AD date input** — pass a JS `Date` directly via `adValue` or `defaultAdValue`
 - ✅ **Fully typed** — complete TypeScript definitions included
 - 🪶 **Zero extra dependencies** — only React as a peer dependency
 
@@ -77,9 +78,9 @@ import { NepaliCalendar } from "nepali-calender-saroj";
 
 | Prop | Type | Default | Description |
 |---|---|---|---|
-| `value` | `BsDate \| null` | — | Controlled selected date. Pass `null` to clear. |
-| `defaultValue` | `BsDate` | — | Uncontrolled default selection. |
-| `onChange` | `(bs: BsDate \| null, ad: Date \| null) => void` | — | Called on day click or clear. |
+| `value` | `BsDate \| null` | — | Controlled selected date (BS). Pass `null` to clear. |
+| `defaultValue` | `BsDate` | — | Uncontrolled default selection (BS). |
+| `onChange` | `(bs: BsDate \| null, ad: Date \| null) => void` | — | Called on day click or clear. Always receives both BS and AD values. |
 | `showNepali` | `boolean` | `true` | Use Nepali (Devanagari) script for labels and digits. |
 | `showSelectedBar` | `boolean` | `true` | Show the selected-date strip below the grid. |
 | `mode` | `"dark" \| "light"` | `"dark"` | Colour theme for the component. |
@@ -103,12 +104,17 @@ import { NepaliDatePicker } from "nepali-calender-saroj";
 
 | Prop | Type | Default | Description |
 |---|---|---|---|
-| `value` | `BsDate \| null` | — | Controlled selected date. Pass `null` to clear. |
-| `onChange` | `(bs: BsDate \| null, ad: Date \| null) => void` | — | Called when a date is picked or cleared. |
+| `value` | `BsDate \| null` | — | Controlled selected date (BS). Pass `null` to clear. |
+| `adValue` | `Date \| null` | — | Controlled selected date (AD). Auto-converted to BS internally. |
+| `defaultAdValue` | `Date \| null` | — | Uncontrolled default (AD). Auto-converted to BS. Only applied on first render. |
+| `onChange` | `(bs: BsDate \| null, ad: Date \| null) => void` | — | Called when a date is picked or cleared. Always receives both BS and AD values. |
 | `placeholder` | `string` | `"मिति छान्नुहोस्"` | Placeholder text shown when nothing is selected. |
 | `showNepali` | `boolean` | `true` | Use Nepali script for labels and digits. |
 | `mode` | `"dark" \| "light"` | `"light"` | Colour theme for the component. |
 | `className` | `string` | — | Extra CSS class on the root element. |
+
+> **Prop priority** (when multiple value props are provided):
+> `value` → `adValue` → `defaultAdValue` → *(empty)*
 
 ---
 
@@ -119,16 +125,16 @@ import { NepaliDatePicker } from "nepali-calender-saroj";
 Both components accept a `mode` prop. The default is `"dark"`.
 
 ```tsx
-{/* Light mode  (default)*/}
+{/* Light mode */}
 <NepaliCalendar   mode="light" onChange={(bs) => console.log(bs)} />
 <NepaliDatePicker mode="light" placeholder="Select date" onChange={(bs) => console.log(bs)} />
 
 {/* Dark mode */}
-<NepaliCalendar   mode="dark"  onChange={(bs) => console.log(bs)} />
-<NepaliDatePicker mode="dark"  onChange={(bs) => console.log(bs)} />
+<NepaliCalendar   mode="dark" onChange={(bs) => console.log(bs)} />
+<NepaliDatePicker mode="dark" onChange={(bs) => console.log(bs)} />
 ```
 
-You can wire `mode` to your app's theme state to switch themes at runtime:
+You can wire `mode` to your app's theme state to switch at runtime:
 
 ```tsx
 import { useState } from "react";
@@ -139,7 +145,7 @@ function App() {
 
   return (
     <>
-      <button onClick={() => setMode((m) => m === "dark" ? "light" : "dark")}>
+      <button onClick={() => setMode((m) => (m === "dark" ? "light" : "dark"))}>
         Toggle theme
       </button>
       <NepaliCalendar mode={mode} onChange={(bs) => console.log(bs)} />
@@ -148,7 +154,83 @@ function App() {
 }
 ```
 
-### Controlled mode
+---
+
+### Uncontrolled — no default
+
+```tsx
+<NepaliDatePicker
+  onChange={(bs, ad) => {
+    console.log(bs); // { year: 2082, month: 1, day: 1 }
+    console.log(ad); // Date object (AD) or null
+  }}
+/>
+```
+
+---
+
+### Uncontrolled — with an AD default date
+
+Pass any JS `Date` as the starting value. It is auto-converted to BS.
+
+```tsx
+<NepaliDatePicker
+  defaultAdValue={new Date("2025-04-14")}
+  onChange={(bs, ad) => {
+    console.log(bs); // { year: 2082, month: 1, day: 1 }
+    console.log(ad); // Date("2025-04-14")
+  }}
+/>
+```
+
+---
+
+### Controlled — with an AD date
+
+Ideal when your app already works with JS `Date` objects (e.g. from a form, API response, or `useState`).
+
+```tsx
+import { useState } from "react";
+import { NepaliDatePicker } from "nepali-calender-saroj";
+
+function MyForm() {
+  const [date, setDate] = useState<Date | null>(new Date("2025-04-14"));
+
+  return (
+    <NepaliDatePicker
+      adValue={date}
+      onChange={(bs, ad) => setDate(ad)}
+    />
+  );
+}
+```
+
+---
+
+### Controlled — with a BS date object
+
+```tsx
+import { useState } from "react";
+import { NepaliDatePicker, type BsDate } from "nepali-calender-saroj";
+
+function MyForm() {
+  const [bsDate, setBsDate] = useState<BsDate | null>({ year: 2082, month: 1, day: 1 });
+
+  return (
+    <NepaliDatePicker
+      value={bsDate}
+      onChange={(bs, ad) => {
+        setBsDate(bs);
+        console.log(ad); // AD Date is always returned in onChange
+      }}
+    />
+  );
+}
+```
+
+---
+
+### Controlled — inline calendar with BS date
 
 ```tsx
 import { useState } from "react";
@@ -166,14 +248,28 @@ function MyForm() {
 }
 ```
 
-### English labels
+---
+
+### Handling clear (✕ button)
+
+When the user clears the picker, `onChange` fires with `(null, null)`.
 
 ```tsx
-<NepaliCalendar   showNepali={false} onChange={(bs, ad) => console.log(bs, ad)} />
-<NepaliDatePicker showNepali={false} placeholder="Select date" onChange={(bs, ad) => console.log(bs, ad)} />
+<NepaliDatePicker
+  adValue={date}
+  onChange={(bs, ad) => {
+    if (!bs || !ad) {
+      setDate(null); // user cleared the picker
+      return;
+    }
+    setDate(ad);
+  }}
+/>
 ```
 
-### Get both BS and AD dates at once
+---
+
+### Get both BS and AD at once
 
 ```tsx
 <NepaliCalendar
@@ -184,13 +280,26 @@ function MyForm() {
 />
 ```
 
+---
+
+### English labels
+
+```tsx
+<NepaliCalendar   showNepali={false} onChange={(bs, ad) => console.log(bs, ad)} />
+<NepaliDatePicker showNepali={false} placeholder="Select date" onChange={(bs, ad) => console.log(bs, ad)} />
+```
+
+---
+
 ### No selected-date strip
 
 ```tsx
 <NepaliCalendar showSelectedBar={false} onChange={(bs) => console.log(bs)} />
 ```
 
-### Start on a specific date
+---
+
+### Start on a specific BS date
 
 ```tsx
 <NepaliCalendar defaultValue={{ year: 2080, month: 6, day: 15 }} />
@@ -241,8 +350,8 @@ Convert Arabic digits to Nepali (Devanagari) digits.
 ```ts
 import { toNepaliNumber } from "nepali-calender-saroj";
 
-toNepaliNumber(2082);   // "२०८२"
-toNepaliNumber("15");   // "१५"
+toNepaliNumber(2082);  // "२०८२"
+toNepaliNumber("15");  // "१५"
 ```
 
 ---
@@ -291,13 +400,14 @@ import {
 
 ```ts
 import type {
-  BsDate,               // { year, month, day }
-  BsDetailedDate,       // full formatted date object
-  CalendarMode,         // "dark" | "light"
-  CalendarYear,         // single year entry from calendarData.json
-  CalendarData,         // { years: CalendarYear[] }
-  NepaliCalendarProps,  // props for <NepaliCalendar />
-  NepaliDatePickerProps // props for <NepaliDatePicker />
+  BsDate,                          // { year, month, day }
+  BsDetailedDate,                  // full formatted date object
+  CalendarMode,                    // "dark" | "light"
+  CalendarYear,                    // single year entry from calendarData.json
+  CalendarData,                    // { years: CalendarYear[] }
+  NepaliCalendarProps,             // props for <NepaliCalendar />
+  NepaliDatePickerProps,           // props for <NepaliDatePicker />
+  NepaliDatePickerExtendedProps,   // extended props including adValue / defaultAdValue
 } from "nepali-calender-saroj";
 ```
 
@@ -332,6 +442,13 @@ Data is sourced from official Nepali Patro records and anchored to the verified 
 ---
 
 ## Changelog
+
+### v5.3.0
+- Added `adValue` prop to `NepaliDatePicker` — pass a JS `Date` (AD) as a controlled value, auto-converted to BS
+- Added `defaultAdValue` prop to `NepaliDatePicker` — uncontrolled AD default, applied on first render only
+- Exported `NepaliDatePickerExtendedProps` type
+- `onChange` now consistently returns both `bs` and `ad` values in all cases
+- Prop priority order: `value` → `adValue` → `defaultAdValue`
 
 ### v5.2.1
 - Added `mode` prop (`"dark" | "light"`) to both `NepaliCalendar` and `NepaliDatePicker`
