@@ -52,3 +52,42 @@ export function adToBs(adDate: Date): BsDate | null {
 
   return null; // date is outside the supported range
 }
+
+
+
+/**
+ * Convert a date string (YYYY-MM-DD) to Bikram Sambat (BS).
+ *
+ * @example
+ * adStringToBs("2025-04-14")
+ * // → { year: 2082, month: 1, day: 1 }
+ */
+export function adStringToBs(dateString: string): BsDate | null {
+  // Basic validation (YYYY-MM-DD)
+  const parts = dateString.split("-");
+  if (parts.length !== 3) return null;
+
+  const [year, month, day] = parts.map(Number);
+
+  if (
+    isNaN(year) ||
+    isNaN(month) ||
+    isNaN(day)
+  ) {
+    return null;
+  }
+
+  // JS Date: month is 0-based
+  const date = new Date(year, month - 1, day);
+
+  // Extra safety: ensure parsed date matches input (avoids invalid dates like 2025-02-31)
+  if (
+    date.getFullYear() !== year ||
+    date.getMonth() !== month - 1 ||
+    date.getDate() !== day
+  ) {
+    return null;
+  }
+
+  return adToBs(date);
+}

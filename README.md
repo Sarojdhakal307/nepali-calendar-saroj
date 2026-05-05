@@ -340,6 +340,22 @@ bsToAd(2082, 1, 1);
 bsToAd(2080, 12, 30);
 // → Date("2024-04-12")
 ```
+---
+
+### `adStringToBs(dateString: string): BsDate | null`
+
+Convert a Gregorian date string (`YYYY-MM-DD`) to a BS date.
+
+- Returns `null` for invalid format or out-of-range dates
+
+```ts
+import { adStringToBs } from "nepali-calender-saroj";
+
+adStringToBs("2025-04-14");
+// → { year: 2082, month: 1, day: 1 }
+
+adStringToBs("2025-02-31");
+// → null (invalid date)
 
 ---
 

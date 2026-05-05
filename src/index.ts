@@ -2,8 +2,8 @@
 export { NepaliCalendar, NepaliDatePicker } from "./Calendar";
 
 // ─── Conversion utilities ─────────────────────────────────────────────────────
-export { adToBs } from "./adToBs";
-export { bsToAd } from "./bsToAd";
+export { adToBs, adStringToBs } from "./adToBs";
+export { bsToAd, bsStringToAd } from "./bsToAd";
 
 // ─── Formatters & helpers ─────────────────────────────────────────────────────
 export {

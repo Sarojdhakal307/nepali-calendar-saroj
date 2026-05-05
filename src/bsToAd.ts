@@ -20,7 +20,7 @@ const data = calendarData as CalendarData;
 export function bsToAd(
   bsYear: number,
   bsMonth: number,
-  bsDay: number
+  bsDay: number,
 ): Date | null {
   const yearData = data.years.find((y) => y.year === bsYear);
   if (!yearData) return null;
@@ -40,4 +40,34 @@ export function bsToAd(
   const result = new Date(yearData.english_start_date);
   result.setDate(result.getDate() + offset);
   return result;
+}
+
+/**
+ * Convert a BS date string (YYYY-MM-DD) to a Gregorian (AD) Date.
+ *
+ * @example
+ * bsStringToAd("2082-01-01")
+ * // → Date("2025-04-14")
+ */
+export function bsStringToAd(dateString: string): Date | null {
+  // Basic format check
+  const parts = dateString.split("-");
+  if (parts.length !== 3) return null;
+
+  const [year, month, day] = parts.map(Number);
+
+  if (isNaN(year) || isNaN(month) || isNaN(day)) {
+    return null;
+  }
+
+  // Optional: enforce integer values
+  if (
+    !Number.isInteger(year) ||
+    !Number.isInteger(month) ||
+    !Number.isInteger(day)
+  ) {
+    return null;
+  }
+
+  return bsToAd(year, month, day);
 }
