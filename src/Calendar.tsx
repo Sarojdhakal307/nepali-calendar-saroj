@@ -311,8 +311,8 @@ const CalendarCore: React.FC<CalendarCoreProps> = ({
   return (
     <>
       <div className="nc-header">
-        <button className="nc-nav" onClick={prevMonth} aria-label="Previous month">◀</button>
-        <button className="nc-title-btn" onClick={() => setShowYears((v) => !v)} aria-label="Pick year">
+        <button type="button" className="nc-nav" onClick={prevMonth} aria-label="Previous month">◀</button>
+        <button type="button" className="nc-title-btn" onClick={() => setShowYears((v) => !v)} aria-label="Pick year">
           <div className="nc-title-main">
             {showNepali
               ? `${NEPALI_MONTHS[viewMonth - 1]} ${toNepaliNumber(viewYear)}`
@@ -320,13 +320,14 @@ const CalendarCore: React.FC<CalendarCoreProps> = ({
           </div>
           <div className="nc-title-sub">{adLabel}</div>
         </button>
-        <button className="nc-nav" onClick={nextMonth} aria-label="Next month">▶</button>
+        <button type="button" className="nc-nav" onClick={nextMonth} aria-label="Next month">▶</button>
       </div>
 
       {showYears ? (
         <div className="nc-year-grid" ref={yearGridRef}>
           {YEARS.map((yd) => (
             <button
+            type="button"
               key={yd.year}
               className={`nc-yr-btn${yd.year === viewYear ? " is-cur" : ""}`}
               onClick={() => { setViewYear(yd.year); setShowYears(false); }}
@@ -394,7 +395,7 @@ const SelectedBar: React.FC<SelectedBarProps> = ({ selected, showNepali, onClear
         </div>
         {ad && <div className="nc-sel-ad">{formatAdDate(ad)}</div>}
       </div>
-      <button className="nc-clear-btn" onClick={onClear} aria-label="Clear selection">✕</button>
+      <button type="button" className="nc-clear-btn" onClick={onClear} aria-label="Clear selection">✕</button>
     </div>
   );
 };
