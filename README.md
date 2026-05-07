@@ -13,6 +13,7 @@ Supports date display, date picking, and AD ↔ BS conversion — covering **BS 
 
 - 📅 **Inline calendar** — drop in a full month grid anywhere
 - 🔽 **Date picker** — trigger button + dropdown, closes on outside click
+- 📆 **Date range picker** — dual-month dropdown for selecting a start and end date
 - 🔁 **AD ↔ BS conversion** — accurate utilities for both directions
 - 🇳🇵 **Nepali script** — Devanagari labels and digits, togglable to English
 - 🌗 **Dark & light mode** — built-in theme support via a single `mode` prop
@@ -43,7 +44,7 @@ npm install react react-dom
 ## Quick Start
 
 ```tsx
-import { NepaliCalendar, NepaliDatePicker } from "nepali-calender-saroj";
+import { NepaliCalendar, NepaliDatePicker, NepaliDateRangePicker } from "nepali-calender-saroj";
 
 export default function App() {
   return (
@@ -53,6 +54,9 @@ export default function App() {
 
       {/* Dropdown picker */}
       <NepaliDatePicker onChange={(bs, ad) => console.log(bs, ad)} />
+
+      {/* Range picker */}
+      <NepaliDateRangePicker onChange={(bs, ad) => console.log(bs, ad)} />
     </>
   );
 }
@@ -115,6 +119,69 @@ import { NepaliDatePicker } from "nepali-calender-saroj";
 
 > **Prop priority** (when multiple value props are provided):
 > `value` → `adValue` → `defaultAdValue` → *(empty)*
+
+---
+
+### `<NepaliCalendarRange />`
+
+An inline dual-month calendar for selecting a date range. Renders both panels side by side.
+
+```tsx
+import { NepaliCalendarRange } from "nepali-calender-saroj";
+
+<NepaliCalendarRange
+  onChange={(bs, ad) => console.log(bs.start, bs.end, ad.start, ad.end)}
+/>
+```
+
+#### Props
+
+| Prop | Type | Default | Description |
+|---|---|---|---|
+| `value` | `BsDateRange \| null` | — | Controlled range (BS). Pass `null` to clear. |
+| `defaultValue` | `BsDateRange` | — | Uncontrolled default range (BS). |
+| `onChange` | `(bs: BsDateRange, ad: AdDateRange) => void` | — | Fired when both start and end are selected. |
+| `showNepali` | `boolean` | `true` | Use Nepali script for labels and digits. |
+| `mode` | `"dark" \| "light"` | `"light"` | Colour theme. |
+| `className` | `string` | — | Extra CSS class on the root element. |
+| `minDate` | `BsDate` | — | Earliest selectable BS date. Dates before this are disabled. |
+| `maxDate` | `BsDate` | — | Latest selectable BS date. Dates after this are disabled. |
+
+---
+
+### `<NepaliDateRangePicker />`
+
+A split trigger button (start / end) that opens a dropdown dual-month range calendar. Closes automatically when both dates are selected, or on outside click.
+
+```tsx
+import { NepaliDateRangePicker } from "nepali-calender-saroj";
+
+<NepaliDateRangePicker
+  onChange={(bs, ad) => console.log(bs, ad)}
+/>
+```
+
+#### Props
+
+| Prop | Type | Default | Description |
+|---|---|---|---|
+| `value` | `BsDateRange \| null` | — | Controlled range (BS). |
+| `defaultValue` | `BsDateRange` | — | Uncontrolled default range (BS). |
+| `adValue` | `AdDateRange \| null` | — | Controlled range (AD `Date` objects). Auto-converted to BS internally. |
+| `defaultAdValue` | `AdDateRange` | — | Uncontrolled default range (AD). Applied on first render only. |
+| `onChange` | `(bs: BsDateRange, ad: AdDateRange) => void` | — | Fired when both dates are selected or when the range is cleared. |
+| `startPlaceholder` | `string` | `"सुरू मिति"` | Placeholder for the start half of the trigger. |
+| `endPlaceholder` | `string` | `"अन्तिम मिति"` | Placeholder for the end half of the trigger. |
+| `showNepali` | `boolean` | `true` | Use Nepali script for labels and digits. |
+| `mode` | `"dark" \| "light"` | `"light"` | Colour theme. |
+| `className` | `string` | — | Extra CSS class on the root wrapper. |
+| `minDate` | `BsDate` | — | Earliest selectable BS date. |
+| `maxDate` | `BsDate` | — | Latest selectable BS date. |
+
+> **Prop priority:** `value` → `adValue` → `defaultAdValue` → *(empty)*
+
+> Clicking the **start half** of the trigger reopens the picker in start-selection mode.  
+> Clicking the **end half** reopens it in end-selection mode.
 
 ---
 
@@ -307,6 +374,159 @@ When the user clears the picker, `onChange` fires with `(null, null)`.
 
 ---
 
+### Range — uncontrolled
+
+The simplest usage. No state needed; `onChange` fires once both dates are chosen.
+
+```tsx
+import { NepaliDateRangePicker } from "nepali-calender-saroj";
+
+<NepaliDateRangePicker
+  onChange={(bs, ad) => {
+    console.log(bs.start); // { year: 2082, month: 1, day: 1 }
+    console.log(bs.end);   // { year: 2082, month: 3, day: 15 }
+    console.log(ad.start); // Date object
+    console.log(ad.end);   // Date object
+  }}
+/>
+```
+
+---
+
+### Range — controlled with BS dates
+
+```tsx
+import { useState } from "react";
+import { NepaliDateRangePicker, type BsDateRange } from "nepali-calender-saroj";
+
+function MyForm() {
+  const [range, setRange] = useState<BsDateRange>({ start: null, end: null });
+
+  return (
+    <NepaliDateRangePicker
+      value={range}
+      onChange={(bs) => setRange(bs)}
+    />
+  );
+}
+```
+
+---
+
+### Range — controlled with AD dates
+
+Ideal when your backend returns ISO date strings or JS `Date` objects.
+
+```tsx
+import { useState } from "react";
+import { NepaliDateRangePicker, type AdDateRange } from "nepali-calender-saroj";
+
+function MyForm() {
+  const [range, setRange] = useState<AdDateRange>({ start: null, end: null });
+
+  return (
+    <NepaliDateRangePicker
+      adValue={range}
+      onChange={(bs, ad) => setRange(ad)}
+    />
+  );
+}
+```
+
+---
+
+### Range — with a default AD range (uncontrolled)
+
+```tsx
+<NepaliDateRangePicker
+  defaultAdValue={{
+    start: new Date("2025-04-14"),
+    end:   new Date("2025-07-16"),
+  }}
+  onChange={(bs, ad) => console.log(bs, ad)}
+/>
+```
+
+---
+
+### Range — inline dual-month calendar
+
+```tsx
+import { NepaliCalendarRange } from "nepali-calender-saroj";
+
+<NepaliCalendarRange
+  mode="light"
+  onChange={(bs, ad) => {
+    console.log(`${bs.start?.year}/${bs.start?.month}/${bs.start?.day}`);
+    console.log(`${bs.end?.year}/${bs.end?.month}/${bs.end?.day}`);
+  }}
+/>
+```
+
+---
+
+### Range — with min/max bounds
+
+Restrict selectable dates to a specific window. Dates outside the bounds are rendered dimmed and are not clickable.
+
+```tsx
+<NepaliDateRangePicker
+  minDate={{ year: 2082, month: 1,  day: 1  }}
+  maxDate={{ year: 2082, month: 12, day: 30 }}
+  onChange={(bs, ad) => console.log(bs, ad)}
+/>
+```
+
+---
+
+### Range — clearing the selection
+
+When the user clicks ✕ in the selected-date bar, `onChange` fires with empty ranges.
+
+```tsx
+<NepaliDateRangePicker
+  adValue={range}
+  onChange={(bs, ad) => {
+    if (!ad.start && !ad.end) {
+      setRange({ start: null, end: null }); // cleared
+      return;
+    }
+    setRange(ad);
+  }}
+/>
+```
+
+---
+
+### Range — English labels
+
+```tsx
+<NepaliDateRangePicker
+  showNepali={false}
+  startPlaceholder="Start date"
+  endPlaceholder="End date"
+  onChange={(bs, ad) => console.log(bs, ad)}
+/>
+```
+
+---
+
+### Range — dark mode
+
+```tsx
+<NepaliDateRangePicker
+  mode="dark"
+  onChange={(bs, ad) => console.log(bs, ad)}
+/>
+
+<NepaliCalendarRange
+  mode="dark"
+  onChange={(bs, ad) => console.log(bs, ad)}
+/>
+```
+
+---
+
 ## Utilities
 
 ### `adToBs(adDate: Date): BsDate | null`
@@ -356,6 +576,7 @@ adStringToBs("2025-04-14");
 
 adStringToBs("2025-02-31");
 // → null (invalid date)
+```
 
 ---
 
@@ -417,6 +638,8 @@ import {
 ```ts
 import type {
   BsDate,                          // { year, month, day }
+  BsDateRange,                     // { start: BsDate | null, end: BsDate | null }
+  AdDateRange,                     // { start: Date | null, end: Date | null }
   BsDetailedDate,                  // full formatted date object
   CalendarMode,                    // "dark" | "light"
   CalendarYear,                    // single year entry from calendarData.json
@@ -424,6 +647,8 @@ import type {
   NepaliCalendarProps,             // props for <NepaliCalendar />
   NepaliDatePickerProps,           // props for <NepaliDatePicker />
   NepaliDatePickerExtendedProps,   // extended props including adValue / defaultAdValue
+  NepaliCalendarRangeProps,        // props for <NepaliCalendarRange />
+  NepaliDateRangePickerProps,      // props for <NepaliDateRangePicker />
 } from "nepali-calender-saroj";
 ```
 
@@ -434,6 +659,24 @@ interface BsDate {
   year: number;   // e.g. 2082
   month: number;  // 1–12
   day: number;    // 1–32
+}
+```
+
+### `BsDateRange`
+
+```ts
+interface BsDateRange {
+  start: BsDate | null;
+  end:   BsDate | null;
+}
+```
+
+### `AdDateRange`
+
+```ts
+interface AdDateRange {
+  start: Date | null;
+  end:   Date | null;
 }
 ```
 
@@ -458,6 +701,16 @@ Data is sourced from official Nepali Patro records and anchored to the verified 
 ---
 
 ## Changelog
+
+### v5.4.0
+- Added `NepaliDateRangePicker` — split trigger + dual-month dropdown for start/end date selection
+- Added `NepaliCalendarRange` — inline dual-month range calendar
+- New types: `BsDateRange`, `AdDateRange`, `NepaliCalendarRangeProps`, `NepaliDateRangePickerProps`
+- Range supports `minDate` / `maxDate` bounds with disabled-day rendering
+- `adValue` / `defaultAdValue` supported as `AdDateRange` on the range picker
+- Hover preview highlights the in-range span before confirming end date
+- Clicking start/end halves of the trigger independently reopens in the correct selection mode
+- Styles injected via a separate `data-nepali-calendar-range` tag — no conflicts with existing styles
 
 ### v5.3.0
 - Added `adValue` prop to `NepaliDatePicker` — pass a JS `Date` (AD) as a controlled value, auto-converted to BS

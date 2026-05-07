@@ -1,6 +1,6 @@
 // ─── Components ───────────────────────────────────────────────────────────────
 export { NepaliCalendar, NepaliDatePicker } from "./Calendar";
-
+export { NepaliCalendarRange, NepaliDateRangePicker } from "./Nepalidaterangepicker";
 // ─── Conversion utilities ─────────────────────────────────────────────────────
 export { adToBs, adStringToBs } from "./adToBs";
 export { bsToAd, bsStringToAd } from "./bsToAd";
@@ -27,3 +27,11 @@ export type {
   NepaliCalendarProps,
   NepaliDatePickerProps,
 } from "./type";
+
+export type {
+  BsDateRange,
+  AdDateRange,
+  NepaliCalendarRangeProps,
+  NepaliDateRangePickerProps,
+} from "./Nepalidaterangepicker";
+
